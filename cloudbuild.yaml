@@ -1,0 +1,46 @@
+steps:
+
+  # Docker Build and Tag to GCR
+  - name: 'gcr.io/cloud-builders/docker'
+    args: 
+      - build
+      - '--no-cache'
+      - '-t'
+      - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_IMAGE_NAME:$SHORT_SHA'
+      - .
+      - '-f'
+      - Dockerfile
+    id: Docker Build
+
+  # Docker Push to GCR
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_IMAGE_NAME:$SHORT_SHA'
+    id: Docker Push
+
+  # Remote on Compute Engine
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    timeout: 240s
+    args: 
+      - compute
+      - ssh
+      - test1
+      - '--project=ace-matrix-352909'
+      - '--zone=us-central1-c'
+      - '--command=apt-get install docker.io;sudo usermod -a -G docker root;newgrp docker;gcloud auth configure-docker;docker pull gcr.io/ace-matrix-352909/chimera-linux/chimera:a89bc80; docker run -d -it --name chimera -p 8080:4000 gcr.io/ace-matrix-352909/chimera-linux/chimera:a89bc80;docker ps -a'
+    id: Login into Compute Engine and deploy app
+  
+
+images:
+  - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_IMAGE_NAME:$SHORT_SHA'
+
+options:
+  substitutionOption: ALLOW_LOOSE
+substitutions:
+  _GCR_HOSTNAME: gcr.io
+  _IMAGE_NAME: chimera1
+  _DEPLOY_REGION: asia-southeast1
+
+
