@@ -18,7 +18,7 @@ docker run -d -it --name <container_name> -p <forward_portnumber>:<application_p
 
 ```
 
-# Google Cloud platform
+# CI/CD using Google Cloud Platform
 
 ### Before you begin
 
