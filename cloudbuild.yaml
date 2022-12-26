@@ -19,7 +19,7 @@ steps:
       - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_IMAGE_NAME:$SHORT_SHA'
     id: Docker Push
 
-  # Remote on Compute Engine
+  # Deploying app into Compute Engine
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: gcloud
     timeout: 240s
@@ -28,19 +28,14 @@ steps:
       - ssh
       - <instance-name>
       - '--project=$PROJECT_ID'
-      - '--zone=us-central1-c'
+      - '--zone=$_DEPLOY_REGION'
       - '--command=apt-get install docker.io;sudo usermod -a -G docker root;newgrp docker;gcloud auth configure-docker;docker pull $_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_IMAGE_NAME:$SHORT_SHA; docker run -d -it --name chimera -p 8080:4000 $_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_IMAGE_NAME:$SHORT_SHA;docker ps -a'
-    id: Login into Compute Engine and deploy app
+    id: Deploy app into GCE
   
-
-images:
-  - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_IMAGE_NAME:$SHORT_SHA'
-
-
 
 options:
   substitutionOption: ALLOW_LOOSE
 substitutions:
   _GCR_HOSTNAME: gcr.io
   _IMAGE_NAME: chimera
-  _DEPLOY_REGION: asia-southeast1
+  _DEPLOY_REGION: us-central1-c
