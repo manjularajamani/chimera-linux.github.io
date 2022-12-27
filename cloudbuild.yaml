@@ -28,7 +28,7 @@ steps:
       - ssh
       - <instance-name>
       - '--project=$PROJECT_ID'
-      - '--zone=$_DEPLOY_REGION'
+      - '--zone=us-central1-c'
       - '--command=apt-get install docker.io;sudo usermod -a -G docker root;newgrp docker;gcloud auth configure-docker;docker pull $_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_IMAGE_NAME:$SHORT_SHA; docker run -d -it --name chimera -p 8080:4000 $_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_IMAGE_NAME:$SHORT_SHA;docker ps -a'
     id: Deploy app into GCE
   
@@ -38,4 +38,4 @@ options:
 substitutions:
   _GCR_HOSTNAME: gcr.io
   _IMAGE_NAME: chimera
-  _DEPLOY_REGION: us-central1-c
+  _DEPLOY_REGION: asia-southeast1 // This region for Cloud Run
