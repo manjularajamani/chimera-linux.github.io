@@ -32,10 +32,42 @@ steps:
       - '--command=apt-get install docker.io;sudo usermod -a -G docker root;newgrp docker;gcloud auth configure-docker;docker pull $_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_IMAGE_NAME:$SHORT_SHA; docker run -d -it --name chimera -p 8080:4000 $_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_IMAGE_NAME:$SHORT_SHA;docker ps -a'
     id: Deploy app into GCE
   
+  # REPLACE variables in deployment.yaml file
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo $_SHORT_SHA
+        echo $_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_IMAGE_NAME:$SHORT_SHA
+
+        sed -i -e "s/TAG/$_SHORT_SHA/g" deployment.yaml
+    id: Replacing image variable
+
+  # Deploying APP into GKE Cluster
+  - name: "gcr.io/cloud-builders/gke-deploy"
+    args:
+      - run
+      - --filename=deployment.yaml
+      - --location=us-central1-c
+      - --cluster=<cluster-name>
+    id: Deploying app into GKE Cluster    
+  
+  # Listing all resources
+  - name: "gcr.io/cloud-builders/kubectl"
+    args: ["get", "all"]
+    env:
+    - "CLOUDSDK_COMPUTE_ZONE=us-central1-c"
+    - "CLOUDSDK_CONTAINER_CLUSTER=<cluster-name>"
+    id: List deployed resource
+
 
 options:
   substitutionOption: ALLOW_LOOSE
+  dynamic_substitutions: true
+
 substitutions:
   _GCR_HOSTNAME: gcr.io
   _IMAGE_NAME: chimera
-  _DEPLOY_REGION: asia-southeast1 // This region for Cloud Run
+  _DEPLOY_REGION: asia-southeast1 
+  _SHORT_SHA: $SHORT_SHA
